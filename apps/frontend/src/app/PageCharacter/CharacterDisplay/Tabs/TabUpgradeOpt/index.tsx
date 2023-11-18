@@ -189,6 +189,7 @@ export default function TabUpopt() {
   const generateBuilds = useCallback(async () => {
     const {
       statFilters,
+      excludedLocations,
       optimizationTarget,
       mainStatKeys,
       levelLow,
@@ -244,7 +245,16 @@ export default function TabUpopt() {
         return [slotKey, art?.setKey ?? '']
       })
     )
-    function respectSexExclusion(art: ICachedArtifact) {
+
+    function respectExcludedLocations(art: ICachedArtifact) {
+      if (art.location === '') return true
+      if (excludedLocations.includes(art.location)) {
+        return false
+      }
+      return true
+    }
+
+    function respectSetExclusion(art: ICachedArtifact) {
       const newSK = { ...curEquipSetKeys }
       newSK[art.slotKey] = art.setKey
       const skc: DynStat = {}
@@ -297,7 +307,8 @@ export default function TabUpopt() {
     )
     const artifactsToConsider = database.arts.values
       .filter((art) => art.rarity === 5)
-      .filter(respectSexExclusion)
+      .filter(respectSetExclusion)
+      .filter(respectExcludedLocations)
       .filter((art) => show20 || art.level !== 20)
       .filter(
         (art) =>
